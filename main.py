@@ -1,5 +1,5 @@
 # Encryption & Decryption Software
-# Version 1.1
+# Version 1.2
 
 '''
 This is a python 3 script to encrypt and decrypt files using a password.
@@ -8,8 +8,7 @@ Install the requirements and test this script out for yourselves.
 
 # Import Section
 from os import listdir, path
-from cryptography.fernet import Fernet
-from cryptography.exceptions import InvalidSignature
+from cryptography.fernet import Fernet, InvalidToken
 from base64 import b64encode
 from shutil import move
 from sys import argv
@@ -26,6 +25,7 @@ class Encrypt:
         with open(Forbidden, 'rb') as File_Obj:
             Tmp = File_Obj.read()
         self.forbidden_hash = sha256(Tmp).hexdigest()
+
     def Encrypt_File(self, FILE):
         with open(FILE, 'rb') as File_Obj:
             Data = File_Obj.read()
@@ -91,8 +91,11 @@ class Decrypt:
             New_File_Name = FILE[0:-10]
             move(FILE, New_File_Name)
             self.dec_c += 1
-        except InvalidSignature:
-            print("[-] {FILE} Could not be decrypted due to invalid KEY")
+        except InvalidToken:
+            if self.err_c < 5:
+                print(f"[-] {FILE} Could not be decrypted due to invalid KEY")
+            if self.err_c == 6:
+                print("...")
             self.err_c += 1
     
     def Execute(self):
@@ -135,3 +138,4 @@ if __name__=="__main__":
     else:
         Cryptor = Decrypt(Target, Key)
     Cryptor.Execute()
+    str(input("Press any key to exit..."))
