@@ -1,5 +1,5 @@
 # Encryption & Decryption Software
-# Version 1.2
+# Version 1.3
 
 '''
 This is a python 3 script to encrypt and decrypt files using a password.
@@ -38,7 +38,11 @@ class Encrypt:
     def Recurse_Dir(self, PATH):
         if path.isfile(PATH):
             if not PATH.endswith(".encrypted"):
-                self.Files.append(PATH)
+                if Certain_Extensions:
+                    if PATH.rsplit('.')[-1] in Extensions:
+                        self.Files.append(PATH)
+                else:
+                    self.Files.append(PATH)
         elif path.isdir(PATH):
             for item in listdir(PATH):
                 Abs_Path = path.join(PATH, item)
@@ -75,7 +79,11 @@ class Decrypt:
     def Recurse_Dir(self, PATH):
         if path.isfile(PATH):
             if PATH.endswith(".encrypted"):
-                self.Files.append(PATH)
+                if Certain_Extensions:
+                    if PATH.rsplit('.')[-2] in Extensions:
+                        self.Files.append(PATH)
+                else:
+                    self.Files.append(PATH)
         elif path.isdir(PATH):
             for item in listdir(PATH):
                 Abs_Path = path.join(PATH, item)
@@ -106,9 +114,8 @@ class Decrypt:
 
 # Function
 def Make_Key(PASSWORD):
-    while len(PASSWORD) < 32:
-        PASSWORD += "0"
-    return b64encode(PASSWORD.encode())
+    half = sha256(PASSWORD.encode()).hexdigest()[0:32]
+    return b64encode(half.encode())
 
 # Variables and Main
 Forbidden = argv[0]
@@ -126,11 +133,17 @@ if __name__=="__main__":
         if Mode != 'E' and Mode != 'D':
             print("[*] please choose E or D")
             continue
-        Password = str(input("Enter a password (length max 32): "))
-        if len(Password) > 32:
-            print("[-] password length exceeded 32 characters!!")
-            continue
         break
+
+    Password = str(input("Enter a password: "))
+    File_Types = str(input("Target file extensions to encrypt (leave blank for all; example- .txt,.pdf,.py): "))
+    Extensions = [ext for ext in File_Types.split(',') if ext.startswith('.')]
+
+    if len(Extensions) > 0:
+        Certain_Extensions = True
+        Extensions = [x.strip('.') for x in Extensions]
+    else:
+        Certain_Extensions = False
 
     Key = Make_Key(Password)
     if Mode == 'E':
